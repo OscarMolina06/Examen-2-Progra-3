@@ -18,8 +18,7 @@ public class Acceso {
     public String getIdUsuario() { return idUsuario; }
     public String getFechaEntrada() { return fechaEntrada; }
     public String getFechaSalida() { return fechaSalida; }
-    public void setFechaSalida(String fechaSalida) { this.fechaSalida = fechaSalida; }
 
     @Override
-    public String toString() { return idUsuario + "|" + fechaEntrada + "|" + (fechaSalida == null ? "NULL" : fechaSalida); }
+    public String toString() { return idUsuario + "|" + fechaEntrada + "|" + fechaSalida; }
 }

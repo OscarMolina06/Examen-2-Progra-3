@@ -1,1 +1,2 @@
-1,Oscar Molina Corrales ,Estudiante
+1,Oscar Molina Corrales,Docente
+2,Travis Rivera,Estudiante

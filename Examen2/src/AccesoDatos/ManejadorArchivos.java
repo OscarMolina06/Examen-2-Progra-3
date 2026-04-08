@@ -28,15 +28,16 @@ public class ManejadorArchivos {
         try (BufferedReader br = new BufferedReader(new FileReader(archivo))) {
             String linea;
             while ((linea = br.readLine()) != null) {
-                lineas.add(linea);
+                if (!linea.trim().isEmpty()) lineas.add(linea);
             }
         }
         return lineas;
     }
 
-    public void sobreescribirAccesos(List<String> nuevasLineas) throws IOException {
-        try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(RUTA_ACCESOS, false)))) {
-            for (String s : nuevasLineas) out.println(s);
+    public void sobreescribirArchivo(List<String> lineas, boolean esUsuario) throws IOException {
+        String archivo = esUsuario ? RUTA_USUARIOS : RUTA_ACCESOS;
+        try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(archivo, false)))) {
+            for (String s : lineas) out.println(s);
         }
     }
 }
