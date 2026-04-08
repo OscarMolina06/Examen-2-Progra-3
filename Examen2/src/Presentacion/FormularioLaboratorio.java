@@ -9,202 +9,153 @@ import LogicaNegocio.ServicioSistema;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.util.List;
 
 public class FormularioLaboratorio extends JFrame {
     private final ServicioSistema negocio = new ServicioSistema();
-    private JTextField txtID, txtNombre, txtIDAcceso;
+    
+    // Variables de la interfaz
+    private JTextField txtID, txtNombre, txtIDAcceso, txtBuscarHistorial;
     private JComboBox<String> cbRol;
-    private JTable tablaUsuarios;
-    private DefaultTableModel modelo;
+    private JTable tablaUsuarios, tablaHistorial;
+    private DefaultTableModel modeloUsuarios, modeloHistorial; // Asegúrate de que estos nombres coincidan
 
     public FormularioLaboratorio() {
         super("Sistema de Control de Laboratorio Técnico");
-        this.setSize(850, 650);
+        this.setSize(900, 700);
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
-        this.setLayout(new BorderLayout(10, 10));
 
-        // --- PANEL SUPERIOR: FORMULARIO ---
-        JPanel pnlNorte = new JPanel(new GridLayout(5, 2, 5, 5));
-        pnlNorte.setBorder(BorderFactory.createTitledBorder("Gestión de Usuarios"));
+        JTabbedPane pestanas = new JTabbedPane();
+
+        // --- PESTAÑA 1: GESTIÓN DE USUARIOS Y ACCESOS ---
+        JPanel pnlGestion = new JPanel(new BorderLayout(10, 10));
         
+        // Formulario
+        JPanel pnlNorte = new JPanel(new GridLayout(5, 2, 5, 5));
+        pnlNorte.setBorder(BorderFactory.createTitledBorder("Datos de Usuario"));
         txtID = new JTextField(); 
         txtNombre = new JTextField();
         cbRol = new JComboBox<>(new String[]{"Estudiante", "Docente"});
         
-        // VALIDACIÓN: Solo números en ID
-        txtID.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-                char c = e.getKeyChar();
-                if (!Character.isDigit(c) && c != KeyEvent.VK_BACK_SPACE) {
-                    e.consume();
-                }
-            }
-        });
+        // Validaciones de teclado
+        txtID.addKeyListener(new KeyAdapter() { public void keyTyped(KeyEvent e) { if(!Character.isDigit(e.getKeyChar())) e.consume(); }});
+        txtNombre.addKeyListener(new KeyAdapter() { public void keyTyped(KeyEvent e) { if(Character.isDigit(e.getKeyChar())) e.consume(); }});
 
-        // VALIDACIÓN: Solo letras y espacios en Nombre
-        txtNombre.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-                char c = e.getKeyChar();
-                if (!Character.isLetter(c) && !Character.isWhitespace(c) && c != KeyEvent.VK_BACK_SPACE) {
-                    e.consume();
-                }
-            }
-        });
-        
-        pnlNorte.add(new JLabel(" ID (Solo números):")); pnlNorte.add(txtID);
-        pnlNorte.add(new JLabel(" Nombre (Solo letras):")); pnlNorte.add(txtNombre);
+        pnlNorte.add(new JLabel(" ID:")); pnlNorte.add(txtID);
+        pnlNorte.add(new JLabel(" Nombre:")); pnlNorte.add(txtNombre);
         pnlNorte.add(new JLabel(" Rol:")); pnlNorte.add(cbRol);
         
         JButton btnCrear = new JButton("Registrar");
         JButton btnActu = new JButton("Actualizar");
-        JButton btnElim = new JButton("Eliminar"); 
-        JButton btnLimpiar = new JButton("Limpiar");
-
+        JButton btnElim = new JButton("Eliminar");
         JPanel pnlBotones = new JPanel();
-        pnlBotones.add(btnCrear); 
-        pnlBotones.add(btnActu); 
-        pnlBotones.add(btnElim); 
-        pnlBotones.add(btnLimpiar);
-        
+        pnlBotones.add(btnCrear); pnlBotones.add(btnActu); pnlBotones.add(btnElim);
         pnlNorte.add(new JLabel(" Acciones:")); pnlNorte.add(pnlBotones);
 
-        // --- PANEL CENTRAL: TABLA ---
-        modelo = new DefaultTableModel(new Object[]{"ID", "Nombre", "Rol"}, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) { return false; }
-        };
-        tablaUsuarios = new JTable(modelo);
+        // Tabla de Usuarios
+        modeloUsuarios = new DefaultTableModel(new Object[]{"ID", "Nombre", "Rol"}, 0);
+        tablaUsuarios = new JTable(modeloUsuarios);
         
-        // EVENTO: Seleccionar de la tabla
+        // Evento de selección
         tablaUsuarios.addMouseListener(new MouseAdapter() {
-            @Override
             public void mouseClicked(MouseEvent e) {
-                int fila = tablaUsuarios.getSelectedRow();
-                if (fila != -1) {
-                    txtID.setText(modelo.getValueAt(fila, 0).toString());
-                    txtNombre.setText(modelo.getValueAt(fila, 1).toString());
-                    cbRol.setSelectedItem(modelo.getValueAt(fila, 2).toString());
+                int f = tablaUsuarios.getSelectedRow();
+                if(f != -1){
+                    txtID.setText(modeloUsuarios.getValueAt(f, 0).toString());
+                    txtNombre.setText(modeloUsuarios.getValueAt(f, 1).toString());
+                    cbRol.setSelectedItem(modeloUsuarios.getValueAt(f, 2).toString());
                     txtID.setEditable(false);
-                    txtID.setBackground(new Color(230, 230, 230));
                 }
             }
         });
 
-        // --- PANEL INFERIOR: ACCESOS ---
+        // Panel de Accesos (Abajo)
         JPanel pnlSur = new JPanel();
-        pnlSur.setBorder(BorderFactory.createTitledBorder("Registro de Accesos"));
-        txtIDAcceso = new JTextField(12);
-        
-        // VALIDACIÓN: Solo números en ID de Acceso
-        txtIDAcceso.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-                char c = e.getKeyChar();
-                if (!Character.isDigit(c) && c != KeyEvent.VK_BACK_SPACE) e.consume();
-            }
-        });
-
+        pnlSur.setBorder(BorderFactory.createTitledBorder("Control de Accesos (Entrada/Salida)"));
+        txtIDAcceso = new JTextField(10);
         JButton btnEnt = new JButton("Entrada");
         JButton btnSal = new JButton("Salida");
         pnlSur.add(new JLabel("ID Usuario:")); pnlSur.add(txtIDAcceso);
         pnlSur.add(btnEnt); pnlSur.add(btnSal);
 
-        this.add(pnlNorte, BorderLayout.NORTH);
-        this.add(new JScrollPane(tablaUsuarios), BorderLayout.CENTER);
-        this.add(pnlSur, BorderLayout.SOUTH);
+        pnlGestion.add(pnlNorte, BorderLayout.NORTH);
+        pnlGestion.add(new JScrollPane(tablaUsuarios), BorderLayout.CENTER);
+        pnlGestion.add(pnlSur, BorderLayout.SOUTH);
 
-        // --- EVENTOS DE BOTONES ---
+        // --- PESTAÑA 2: REPORTES E HISTORIAL ---
+        JPanel pnlReporte = new JPanel(new BorderLayout(10, 10));
+        pnlReporte.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JPanel pnlFiltro = new JPanel();
+        txtBuscarHistorial = new JTextField(10);
+        JButton btnVerHistorial = new JButton("Ver Historial");
+        pnlFiltro.add(new JLabel("ID a Consultar:")); pnlFiltro.add(txtBuscarHistorial);
+        pnlFiltro.add(btnVerHistorial);
 
+        modeloHistorial = new DefaultTableModel(new Object[]{"Entrada", "Salida", "Duración"}, 0);
+        tablaHistorial = new JTable(modeloHistorial);
+        
+        pnlReporte.add(pnlFiltro, BorderLayout.NORTH);
+        pnlReporte.add(new JScrollPane(tablaHistorial), BorderLayout.CENTER);
+
+        // --- LÓGICA DE BOTONES ---
         btnCrear.addActionListener(e -> {
-            try { 
-                negocio.registrarUsuario(txtID.getText().trim(), txtNombre.getText().trim(), cbRol.getSelectedItem().toString()); 
-                cargarTabla(); 
-                limpiarFormulario();
-                JOptionPane.showMessageDialog(this, "Usuario registrado.");
-            } catch (Exception ex) { JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE); }
+            try {
+                negocio.registrarUsuario(txtID.getText().trim(), txtNombre.getText().trim(), cbRol.getSelectedItem().toString());
+                cargarUsuarios();
+                limpiar();
+            } catch (Exception ex) { JOptionPane.showMessageDialog(this, ex.getMessage()); }
         });
-
-        btnActu.addActionListener(e -> {
-            try { 
-                negocio.actualizarUsuario(txtID.getText().trim(), txtNombre.getText().trim(), cbRol.getSelectedItem().toString()); 
-                cargarTabla(); 
-                limpiarFormulario();
-                JOptionPane.showMessageDialog(this, "Usuario actualizado.");
-            } catch (Exception ex) { JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE); }
-        });
-
-        btnElim.addActionListener(e -> {
-            String id = txtID.getText().trim();
-            if (id.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Seleccione un usuario de la tabla.");
-                return;
-            }
-            int confirm = JOptionPane.showConfirmDialog(this, "¿Eliminar ID: " + id + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                try { 
-                    negocio.eliminarUsuario(id); 
-                    cargarTabla(); 
-                    limpiarFormulario();
-                    JOptionPane.showMessageDialog(this, "Usuario eliminado.");
-                } catch (Exception ex) { JOptionPane.showMessageDialog(this, ex.getMessage()); }
-            }
-        });
-
-        btnLimpiar.addActionListener(e -> limpiarFormulario());
 
         btnEnt.addActionListener(e -> {
-            try { 
-                negocio.registrarEntrada(txtIDAcceso.getText().trim()); 
-                JOptionPane.showMessageDialog(this, "Entrada registrada."); 
-                txtIDAcceso.setText("");
+            try {
+                negocio.registrarEntrada(txtIDAcceso.getText().trim());
+                JOptionPane.showMessageDialog(this, "Entrada registrada.");
             } catch (Exception ex) { JOptionPane.showMessageDialog(this, ex.getMessage()); }
         });
 
         btnSal.addActionListener(e -> {
-            try { 
-                String tiempo = negocio.registrarSalida(txtIDAcceso.getText().trim()); 
-                JOptionPane.showMessageDialog(this, "Salida registrada.\nTiempo total: " + tiempo); 
-                txtIDAcceso.setText("");
+            try {
+                String tiempo = negocio.registrarSalida(txtIDAcceso.getText().trim());
+                JOptionPane.showMessageDialog(this, "Salida registrada. Tiempo: " + tiempo);
             } catch (Exception ex) { JOptionPane.showMessageDialog(this, ex.getMessage()); }
         });
 
-        cargarTabla();
+        btnVerHistorial.addActionListener(e -> {
+            try {
+                modeloHistorial.setRowCount(0);
+                List<String[]> lista = negocio.obtenerHistorialPorUsuario(txtBuscarHistorial.getText().trim());
+                for(String[] r : lista) modeloHistorial.addRow(r);
+            } catch (Exception ex) { JOptionPane.showMessageDialog(this, ex.getMessage()); }
+        });
+
+        pestanas.addTab("Gestión y Accesos", pnlGestion);
+        pestanas.addTab("Historial/Reportes", pnlReporte);
+        this.add(pestanas);
+        
+        cargarUsuarios();
     }
 
-    private void cargarTabla() {
+    private void cargarUsuarios() {
         try {
-            modelo.setRowCount(0);
-            List<Usuario> lista = negocio.consultarUsuarios();
-            for (Usuario u : lista) {
-                modelo.addRow(new Object[]{u.getId(), u.getNombre(), u.getRol()});
+            modeloUsuarios.setRowCount(0);
+            for (Usuario u : negocio.consultarUsuarios()) {
+                modeloUsuarios.addRow(new Object[]{u.getId(), u.getNombre(), u.getRol()});
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            System.out.println("Error al cargar tabla: " + e.getMessage());
+        }
     }
 
-    private void limpiarFormulario() {
+    private void limpiar() {
         txtID.setText("");
         txtNombre.setText("");
-        txtIDAcceso.setText("");
         txtID.setEditable(true);
-        txtID.setBackground(Color.WHITE);
-        tablaUsuarios.clearSelection();
     }
 
     public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {}
-
-        java.awt.EventQueue.invokeLater(() -> {
-            new FormularioLaboratorio().setVisible(true);
-        });
+        java.awt.EventQueue.invokeLater(() -> new FormularioLaboratorio().setVisible(true));
     }
 }
